@@ -39,6 +39,28 @@ python3.12 prepareSingleImage.py --help
 如需指定输出目录，可使用 `--in <目录>`；其他架构、闪存类型及镜像生成参数
 请参阅 `--help` 输出。
 
+## IPQ807x MIBIB/CDT 构建
+
+仓库提供 `Build IPQ807x MIBIB and CDT` GitHub Actions 工作流。相关源码或
+IPQ807x 配置变化时会自动构建，也可在 Actions 页面手动运行。工作流使用
+Python 3.12，生成以下目录并上传为单个 artifact：
+
+```text
+ipq807x/
+├── mibib/       # NOR、NAND、NOR+NAND、eMMC、NOR+eMMC 分区产物
+├── cdt/         # config.xml 中全部板级 CDT
+└── SHA256SUMS   # 所有产物的 SHA-256 校验值
+```
+
+本地可运行同一构建入口：
+
+```bash
+PYTHON_BIN=python3.12 scripts/build_ipq807x_artifacts.sh
+```
+
+默认输出到 `dist/ipq807x`，也可将目标目录作为第一个参数传入。构建脚本会校验
+CDT 数量、关键 MIBIB 文件及空文件，任一检查失败都会返回非零退出码。
+
 ## Python 3.12 移植说明
 
 - 将 Python 2 的 `print`、异常捕获和异常抛出语法更新为 Python 3 语法。

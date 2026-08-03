@@ -1,0 +1,66 @@
+name: Build IPQ807x MIBIB and CDT
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    paths:
+      - prepareSingleImage.py
+      - pack.py
+      - scripts/**
+      - ipq807x/**
+      - .github/workflows/build-ipq807x-artifacts.yml
+  pull_request:
+    paths:
+      - prepareSingleImage.py
+      - pack.py
+      - scripts/**
+      - ipq807x/**
+      - .github/workflows/build-ipq807x-artifacts.yml
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ipq807x-artifacts-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Python 3.12 / IPQ807x
+    runs-on: ubuntu-24.04
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+
+      - name: Compile Python sources
+        run: |
+          git ls-files -co --exclude-standard -z -- '*.py' \
+            | xargs -0 python -W error::SyntaxWarning -m py_compile
+
+      - name: Build and validate IPQ807x artifacts
+        env:
+          PYTHON_BIN: python
+        run: |
+          chmod +x scripts/build_ipq807x_artifacts.sh
+          scripts/build_ipq807x_artifacts.sh "$GITHUB_WORKSPACE/dist/ipq807x"
+
+      - name: Show artifact manifest
+        run: |
+          cat dist/ipq807x/SHA256SUMS
+
+      - name: Upload MIBIB and CDT
+        uses: actions/upload-artifact@v7
+        with:
+          name: ipq807x-mibib-cdt-${{ github.sha }}
+          path: dist/ipq807x
+          if-no-files-found: error
+          retention-days: 30
+          compression-level: 9

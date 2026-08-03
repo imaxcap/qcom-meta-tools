@@ -1,6 +1,10 @@
 ipq6018/in/
+*/machid_xml/
 __pycache__/
 *.py[cod]
 venv_*
 test_output_*
 .pyenv/
+build_out/
+out_*/
+dist/

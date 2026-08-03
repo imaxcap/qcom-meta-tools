@@ -43,7 +43,7 @@ def generate_user_partition(mbn_gen, partition_path, user_bin, output_dir,
 
     try:
         prc = subprocess.Popen([
-            sys.executable, mbn_gen, runtime_partition, user_bin,
+            sys.executable, os.path.abspath(mbn_gen), runtime_partition, user_bin,
         ], cwd=output_dir)
         prc.wait()
         return prc.returncode
@@ -288,7 +288,8 @@ def process_nor(config_path, flash_type):
     else:
         print('...User partition created')
 
-    userpart_path = os.path.join(outputdir, noruserbin)
+    userpart_path = os.path.abspath(os.path.join(outputdir, noruserbin))
+    norsyspartition_abs = os.path.abspath(syspart)
 
     print('\tCreating system partition')
     prc = subprocess.Popen([
@@ -305,7 +306,7 @@ def process_nor(config_path, flash_type):
             '-u',
             userpart_path,
             '-o',
-            syspart,
+            norsyspartition_abs,
             ], cwd=outputdir)
     prc.wait()
     if prc.returncode != 0:
@@ -396,7 +397,8 @@ def process_norplusnand_device(nor_pagesize, nor_pages_per_block, nor_total_bloc
     else:
         print('...User partition created')
 
-    userpart_path = os.path.join(outputdir, norplusnanduserbin)
+    userpart_path = os.path.abspath(os.path.join(outputdir, norplusnanduserbin))
+    norplusnandsyspartition_abs = os.path.abspath(norplusnandsyspartition)
 
     print('\tCreating system partition')
     prc = subprocess.Popen([
@@ -419,7 +421,7 @@ def process_norplusnand_device(nor_pagesize, nor_pages_per_block, nor_total_bloc
             '-u',
             userpart_path,
             '-o',
-            norplusnandsyspartition,
+            norplusnandsyspartition_abs,
             ], cwd=outputdir)
     prc.wait()
     if prc.returncode != 0:
@@ -691,7 +693,8 @@ def process_norplusemmc_device(nor_pagesize, nor_pages_per_block, nor_total_bloc
     else:
         print('...User partition created')
 
-    userpart_path = os.path.join(outputdir, norplusemmcuserbin)
+    userpart_path = os.path.abspath(os.path.join(outputdir, norplusemmcuserbin))
+    norplusemmcsyspartition_abs = os.path.abspath(syspart)
 
     print('\tCreating system partition')
     prc = subprocess.Popen([
@@ -708,7 +711,7 @@ def process_norplusemmc_device(nor_pagesize, nor_pages_per_block, nor_total_bloc
             '-u',
             userpart_path,
             '-o',
-            syspart,
+            norplusemmcsyspartition_abs,
             ], cwd=outputdir)
     prc.wait()
     if prc.returncode != 0:
@@ -876,6 +879,7 @@ def main():
         print("Configuration xml, flash type and output path are needed to generate cdt files")
         return -1
 
+    os.makedirs(outputdir, exist_ok=True)
     process_rc = funcdict[flash_type](config_path, flash_type)
     if process_rc != 0:
         return process_rc
