@@ -196,8 +196,9 @@ def main():
         for cdt_info in os.listdir(srcDir):
                 if not os.path.isdir(cdt_info):
                         if cdt_info.endswith(".xml"):
-                                if process_cdtinfo(cdt_info) < 0:
-                                        return -1
+                                process_rc = process_cdtinfo(cdt_info)
+                                if process_rc != 0:
+                                        return process_rc
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())

@@ -116,9 +116,10 @@ def main():
                 print("Error: config file and output path are needed to generate bootconfig binaries\n")
                 return -1
 
-        if process_bootconfig(config_file) < 0:
-                        return -1
+        process_rc = process_bootconfig(config_file)
+        if process_rc != 0:
+                        return process_rc
 
 
 if __name__ == '__main__':
-    main()
+    sys.exit(main())

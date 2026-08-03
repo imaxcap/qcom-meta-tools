@@ -7,6 +7,7 @@
 
 from optparse import OptionParser
 import os
+import sys
 import mbn_tools
 
 ##############################################################################
@@ -105,4 +106,5 @@ def main():
 
         return
 
-main()
+if __name__ == "__main__":
+        sys.exit(main())

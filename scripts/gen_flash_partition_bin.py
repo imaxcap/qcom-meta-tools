@@ -10,6 +10,7 @@ import xml.etree.ElementTree as ET
 import os
 import subprocess
 import sys
+import tempfile
 from getopt import getopt
 from getopt import GetoptError
 
@@ -18,6 +19,38 @@ cdir = os.path.abspath(cdir)
 Nor_Params = namedtuple("Nor_Params", "pagesize pages_per_block total_blocks")
 Nand_Params = namedtuple("nand_Params", "pagesize pages_per_block total_blocks")
 outputdir = ""
+
+
+def generate_user_partition(mbn_gen, partition_path, user_bin, output_dir,
+        block_size=None, density=None):
+    """Generate a user table without modifying the source partition XML."""
+    runtime_partition = partition_path
+    temporary_partition = None
+
+    if block_size is not None and density is not None:
+        root_part = ET.parse(partition_path)
+        part = root_part.find(".//partitions/partition[2]")
+        part[5].text = str(block_size)
+        part[6].text = str(density)
+
+        temp_dir = os.path.abspath(output_dir or os.curdir)
+        temp_fd, temporary_partition = tempfile.mkstemp(
+            prefix="partition-", suffix=".xml", dir=temp_dir)
+        os.close(temp_fd)
+        root_part.write(
+            temporary_partition, encoding="utf-8", xml_declaration=True)
+        runtime_partition = temporary_partition
+
+    try:
+        prc = subprocess.Popen([
+            sys.executable, mbn_gen, runtime_partition, user_bin,
+        ], cwd=output_dir)
+        prc.wait()
+        return prc.returncode
+    finally:
+        if temporary_partition is not None:
+            os.unlink(temporary_partition)
+
 
 def process_nand_device(pagesize, pages_per_block, total_blocks, entry, nand_type):
 
@@ -71,7 +104,7 @@ def process_nand_device(pagesize, pages_per_block, total_blocks, entry, nand_typ
             nandsyspartition = outputdir + '/nand-system-partition-' + ARCH_NAME + '.bin'
             nanduserpartition = 'nand-user-partition.bin'
     else:
-        nand_blocksize = (nand_pagesize * nand_pages_per_block) / 1024
+        nand_blocksize = (nand_pagesize * nand_pages_per_block) // 1024
         if nand_type == "audio-2k" or nand_type == "audio-4k":
             nand_type = "audio-"
         elif nand_type == "4k":
@@ -220,18 +253,11 @@ def process_nor(config_path, flash_type):
     nor_pagesize = int(nor_param.find('page_size').text)
     nor_pages_per_block = int(nor_param.find('pages_per_block').text)
     nor_total_blocks = int(nor_param.find('total_block').text)
-    block_size = (nor_pagesize * nor_pages_per_block) / 1024
-    density = (block_size * nor_total_blocks) / 1024
+    block_size = (nor_pagesize * nor_pages_per_block) // 1024
+    density = (block_size * nor_total_blocks) // 1024
 
     nor_partition = "$$/" + ARCH_NAME + "/flash_partition/" + flash_type + "-partition.xml"
     nor_partition = nor_partition.replace('$$', cdir)
-
-    if ARCH_NAME != "ipq806x":
-        root_part = ET.parse(nor_partition)
-        part = root_part.find(".//partitions/partition[2]")
-        part[5].text = str(block_size)
-        part[6].text = str(density)
-        root_part.write(nor_partition)
 
     nor_parts = Nor_Params(nor_pagesize, nor_pages_per_block, nor_total_blocks)
 
@@ -249,12 +275,16 @@ def process_nor(config_path, flash_type):
         + str(nor_parts.total_blocks) + ', partition info: ' + nor_partition)
 
     print('\tCreating user partition', end=' ')
-    prc = subprocess.Popen([sys.executable, mbn_gen, nor_partition,
-                            noruserbin], cwd=outputdir)
-    prc.wait()
-    if prc.returncode != 0:
+    if ARCH_NAME == "ipq806x":
+        user_partition_rc = generate_user_partition(
+            mbn_gen, nor_partition, noruserbin, outputdir)
+    else:
+        user_partition_rc = generate_user_partition(
+            mbn_gen, nor_partition, noruserbin, outputdir,
+            block_size, density)
+    if user_partition_rc != 0:
         print('ERROR: unable to create user partition')
-        return prc.returncode
+        return user_partition_rc
     else:
         print('...User partition created')
 
@@ -312,6 +342,8 @@ def process_norplusnand_device(nor_pagesize, nor_pages_per_block, nor_total_bloc
             norplusnand_partition = "$$/" + ARCH_NAME + "/flash_partition/norplusnand-4k-partition.xml"
 
     norplusnand_partition = norplusnand_partition.replace('$$', cdir)
+    block_size = (nor_pagesize * nor_pages_per_block) // 1024
+    density = (block_size * nor_total_blocks) // 1024
     nand_parts = Nand_Params(nand_pagesize, nand_pages_per_block, nand_total_blocks)
     nor_parts = Nor_Params(nor_pagesize, nor_pages_per_block, nor_total_blocks)
 
@@ -331,7 +363,7 @@ def process_norplusnand_device(nor_pagesize, nor_pages_per_block, nor_total_bloc
             norplusnandsyspartition = outputdir + '/norplusnand-system-partition-' + ARCH_NAME + '.bin'
             userpart = 'norplusnand-user-partition.bin'
     else:
-        nand_blocksize = (nand_pagesize * nand_pages_per_block) / 1024
+        nand_blocksize = (nand_pagesize * nand_pages_per_block) // 1024
         if QCN9224:
             norplusnandsyspartition = outputdir + '/norplusnand-system-partition-' + ARCH_NAME + '-m' + str(nand_pagesize) + '-p' + str(nand_blocksize) + 'KiB-qcn9224.bin'
             userpart = 'norplusnand-user-partition-m' + str(nand_pagesize) + '-p' + str(nand_blocksize) + 'KiB-qcn9224.bin'
@@ -347,12 +379,20 @@ def process_norplusnand_device(nor_pagesize, nor_pages_per_block, nor_total_bloc
     print('\tPartition info: ' + norplusnand_partition)
 
     print('\tCreating user partition', end=' ')
-    prc = subprocess.Popen([sys.executable, mbn_gen, norplusnand_partition,
-                norplusnanduserbin], cwd=outputdir)
-    prc.wait()
-    if prc.returncode != 0:
+    update_geometry = (
+        ARCH_NAME != "ipq806x" and
+        os.path.basename(norplusnand_partition) ==
+        "norplusnand-partition.xml")
+    if not update_geometry:
+        user_partition_rc = generate_user_partition(
+            mbn_gen, norplusnand_partition, norplusnanduserbin, outputdir)
+    else:
+        user_partition_rc = generate_user_partition(
+            mbn_gen, norplusnand_partition, norplusnanduserbin, outputdir,
+            block_size, density)
+    if user_partition_rc != 0:
         print('ERROR: unable to create user partition')
-        return prc.returncode
+        return user_partition_rc
     else:
         print('...User partition created')
 
@@ -416,15 +456,6 @@ def process_norplusnand(config_path, flash_type):
 
     norplusnand_partition = "$$/" + ARCH_NAME + "/flash_partition/norplusnand-partition.xml"
     norplusnand_partition = norplusnand_partition.replace('$$', cdir)
-
-    if ARCH_NAME != "ipq806x":
-        root_part = ET.parse(norplusnand_partition)
-        part = root_part.find(".//partitions/partition[2]")
-        block_size = (nor_pagesize * nor_pages_per_block) / 1024
-        density = (block_size * nor_total_blocks) / 1024
-        part[5].text = str(block_size)
-        part[6].text = str(density)
-        root_part.write(norplusnand_partition)
 
     entry = False
     QCN9000 = False
@@ -619,14 +650,8 @@ def process_norplusemmc_device(nor_pagesize, nor_pages_per_block, nor_total_bloc
 
     norplusemmc_partition = norplusemmc_partition.replace('$$', cdir)
 
-    if ARCH_NAME != "ipq806x":
-        root_part = ET.parse(norplusemmc_partition)
-        part = root_part.find(".//partitions/partition[2]")
-        block_size = (nor_pagesize * nor_pages_per_block) / 1024
-        density = (block_size * nor_total_blocks) / 1024
-        part[5].text = str(block_size)
-        part[6].text = str(density)
-        root_part.write(norplusemmc_partition)
+    block_size = (nor_pagesize * nor_pages_per_block) // 1024
+    density = (block_size * nor_total_blocks) // 1024
 
     nor_parts = Nor_Params(nor_pagesize, nor_pages_per_block, nor_total_blocks)
 
@@ -649,12 +674,20 @@ def process_norplusemmc_device(nor_pagesize, nor_pages_per_block, nor_total_bloc
         + str(nor_parts.total_blocks) + ', partition info: ' + norplusemmc_partition)
 
     print('\tCreating user partition', end=' ')
-    prc = subprocess.Popen([sys.executable, mbn_gen, norplusemmc_partition,
-                norplusemmcuserbin], cwd=outputdir)
-    prc.wait()
-    if prc.returncode != 0:
+    update_geometry = (
+        ARCH_NAME != "ipq806x" and
+        os.path.basename(norplusemmc_partition) ==
+        "norplusemmc-partition.xml")
+    if not update_geometry:
+        user_partition_rc = generate_user_partition(
+            mbn_gen, norplusemmc_partition, norplusemmcuserbin, outputdir)
+    else:
+        user_partition_rc = generate_user_partition(
+            mbn_gen, norplusemmc_partition, norplusemmcuserbin, outputdir,
+            block_size, density)
+    if user_partition_rc != 0:
         print('ERROR: unable to create user partition')
-        return prc.returncode
+        return user_partition_rc
     else:
         print('...User partition created')
 
@@ -841,9 +874,11 @@ def main():
                 print(flash_type)
     else:
         print("Configuration xml, flash type and output path are needed to generate cdt files")
-
-    if funcdict[flash_type](config_path, flash_type) < 0:
         return -1
 
+    process_rc = funcdict[flash_type](config_path, flash_type)
+    if process_rc != 0:
+        return process_rc
+
 if __name__ == '__main__':
-    main()
+    sys.exit(main())

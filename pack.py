@@ -132,8 +132,8 @@ class GPT(object):
                             " crc32 current_lba backup_lba first_usable_lba"
                             " last_usable_lba disk_guid start_lba_part_entry"
                             " num_part_entry part_entry_size part_crc32")
-    GPT_SIGNATURE = 'EFI PART'
-    GPT_REVISION = '\x00\x00\x01\x00'
+    GPT_SIGNATURE = b'EFI PART'
+    GPT_REVISION = b'\x00\x00\x01\x00'
     GPT_HEADER_SIZE = 0x5C
     GPT_HEADER_FMT = "<8s4sLL4xQQQQ16sQLLL"
 
@@ -186,8 +186,7 @@ class GPT(object):
             block_start = gpt_table.first_lba
             block_count = gpt_table.last_lba - gpt_table.first_lba + 1
 
-            part_name = gpt_table.part_name.strip(chr(0))
-            name = part_name.replace('\0','')
+            name = gpt_table.part_name.decode("utf-16le").rstrip("\0")
             part_info = PartInfo(name, block_start, block_count, which_flash)
             self.__partitions[name] = part_info
 
@@ -205,7 +204,7 @@ class GPT(object):
         """Returns a list of partitions present in the GPT."""
 
         try:
-            with open(self.filename, "r") as part_fp:
+            with open(self.filename, "rb") as part_fp:
                 self.__validate_and_read_parts(part_fp)
         except IOError as e:
             error("error opening %s" % self.filename, e)
@@ -294,7 +293,7 @@ class MIBIB(object):
             else:
                byte_length = mentry.length * self.flash_flag
 
-            part_name = mentry.name.strip(chr(0))
+            part_name = mentry.name.strip(b'\0').decode('ascii')
             part_info = PartInfo(part_name, byte_offset, byte_length, mentry.which_flash)
             self.__partitions[part_name] = part_info
 
@@ -302,7 +301,7 @@ class MIBIB(object):
         """Returns a list of partitions present in the MIBIB. CE """
 
         try:
-            with open(self.filename, "r") as part_fp:
+            with open(self.filename, "rb") as part_fp:
                 self.__validate(part_fp)
                 self.__read_parts(part_fp)
         except IOError as e:
@@ -551,6 +550,8 @@ def sha1(message):
     """Returns SHA1 digest in hex format of the message."""
 
     m = hashlib.sha1()
+    if isinstance(message, str):
+        message = message.encode('utf-8')
     m.update(message)
     return m.hexdigest()
 
@@ -1788,7 +1789,7 @@ class Pack(object):
         images -- list of ImageInfo, containing images to be part of the blob
         """
         try:
-            its_fp = open(self.its_fname, "wb")
+            its_fp = open(self.its_fname, "w")
         except IOError as e:
             error("error opening its file '%s'" % self.its_fname, e)
 
@@ -2360,4 +2361,4 @@ def main():
                         parser.out_fname, root)
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())

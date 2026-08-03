@@ -81,11 +81,9 @@ def main():
     block_sizes_kb = {
         0: max(1, page_size * pages_per_block // 1024),
     }
-    block_counts = {0: block_count}
     if secondary_page_size and secondary_pages_per_block:
         block_sizes_kb[1] = max(
             1, secondary_page_size * secondary_pages_per_block // 1024)
-        block_counts[1] = secondary_block_count
 
     try:
         with open(usr_tbl_fname, "rb") as f:
@@ -128,11 +126,6 @@ def main():
 
         offset = curr_offsets[which_flash]
         curr_offsets[which_flash] += length
-
-        block_limit = block_counts.get(which_flash, 0)
-        if block_limit and curr_offsets[which_flash] > block_limit:
-            print("Problem in usr to sys parti conversion")
-            sys.exit(1)
 
         sys_entry = struct.pack(
             "<16sIIBBBB", name, offset, length, attr1, attr2, attr3,
@@ -178,4 +171,4 @@ def main():
         f.write(total_binary)
 
 if __name__ == "__main__":
-    main()
+    sys.exit(main())
