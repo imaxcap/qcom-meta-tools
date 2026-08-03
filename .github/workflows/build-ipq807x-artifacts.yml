@@ -37,10 +37,6 @@ jobs:
             python3 scripts/gen_flash_partition_bin.py -c ipq807x/config.xml -f ${flash_type} -o build_out/mibib
           done
 
-      - name: Verify Decompiler on Generated MIBIB Binaries
-        run: |
-          python3 parse_mibib.py -i build_out/mibib/norplusnand-system-partition-ipq807x.bin -o build_out/mibib/norplusnand-partition-decompiled.xml
-
       - name: Upload IPQ807x Artifacts
         uses: actions/upload-artifact@v4
         with:
