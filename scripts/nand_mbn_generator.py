@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # ===========================================================================
 #Copyright (c) 2017 Qualcomm Technologies, Inc.
 #All Rights Reserved.
@@ -11,8 +12,8 @@ c_file_name = "boot_cdt_array.c"
 debug = True
 
 if len(sys.argv) < 3:
-    print "Usage: cdt_generator.py filename.xml binfile.bin"
-    sys.exit(1);
+    print("Usage: cdt_generator.py filename.xml binfile.bin")
+    sys.exit(1)
 
 filename = sys.argv[1]
 bin_file_name = sys.argv[2]
@@ -39,12 +40,12 @@ def clean_string(some_string):
 
 def strip_hex(hex_string):
     if len(hex_string) < 3 or not (hex_string[:2] == "0x" or hex_string[:2] == "0X"):
-        return hex_string	
+        return hex_string
     return hex_string[2:]
 
 def little_endian(hex_string):
     if len(hex_string) % 2 != 0:
-        print "%s is an invalid value to convert to little endian!" % (hex_string)
+        print("%s is an invalid value to convert to little endian!" % (hex_string))
         return
     swap_list = []
     for i in range(0, len(hex_string), 2):
@@ -53,7 +54,7 @@ def little_endian(hex_string):
 
 def get_attribute(token, att_name):
     tag = get_tag_name(token)
-    tag_att_list = re.split('\s+', strip_tags(token))
+    tag_att_list = re.split(r'\s+', strip_tags(token))
     tag_att_list.remove(tag)
     for att in tag_att_list:
         att_val = att.split("=")
@@ -81,13 +82,13 @@ def get_tag_name(tag):
     if is_closing_tag(tag):
         return tag[2:-1]
     else:
-        tag_split = re.split('\s+', tag[1:-1])
+        tag_split = re.split(r'\s+', tag[1:-1])
         return tag_split[0]
 
 def process_tag(tag):
-    tag_name = get_tag_name(tag)	
+    tag_name = get_tag_name(tag)
     parent_tag_name = len(token_stack) >= 2 and get_tag_name(token_stack[-2]) or ""
-        
+
     if is_closing_tag(tag):
         if tag_name == partitions_parent_tag_name:
             if len(metadata) == 0:
@@ -99,7 +100,7 @@ def process_data(data, token_stack):
     tag = token_stack[-1]
     tag_name = get_tag_name(tag)
     parent_tag_name = len(token_stack) >= 2 and get_tag_name(token_stack[-2]) or ""
-    
+
     if tag_name in ignore_tags:
         return
 
@@ -107,19 +108,19 @@ def process_data(data, token_stack):
     data_length = get_attribute(tag, "length")
     data_type = get_attribute(tag, "type")
     if not data_type == "string":
-        clean_data = "%02X" % eval(clean_data)
+        clean_data = "%02X" % int(eval(clean_data))
     else:
         clean_data = "".join(["%02x" % ord(x) for x in clean_data])
     if not data_length is None:
         data_length = int(data_length)
         clean_data = pad_string(clean_data, data_length * 2, data_type != "string")
-    
+
     data_endianness = get_attribute(tag, "endian")
     # assuming big-endian by default
     # assuming 'string's need to be converted to little endian
     if not data_type == "string" or ((not data_endianness is None) and data_endianness.lower() == "little"):
         clean_data = little_endian(clean_data)
-    
+
     if not parent_tag_name == partitions_parent_tag_name:
         header.append(clean_data)
     else:
@@ -132,14 +133,14 @@ def generate_metadata():
 def generate_footer():
     current_file_len = 0
     for x in all_data:
-        current_file_len  = current_file_len + len(x)/2
+        current_file_len  = current_file_len + len(x)//2
     footer.append("0" * 2 * (full_file_length - current_file_len))
 
 def write_bin_file(filename, data):
     fp = open(filename, 'wb')
     for i in range(0, len(data), 2):
         data_item = data[i:i+2]
-        fp.write(chr(int(data_item, 16)))
+        fp.write(bytes([int(data_item, 16)]))
     fp.close()
 
 file_string = open(filename, 'r').read()

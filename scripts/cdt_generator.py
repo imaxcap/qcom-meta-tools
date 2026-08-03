@@ -5,12 +5,12 @@
 # REFERENCES
 
 #  $Header: //components/rel/boot.bf/3.1.1/tools/genimage/misc/cdt_mod.py#2 $
-#  $DateTime: 2015/07/22 10:35:57 $ 
+#  $DateTime: 2015/07/22 10:35:57 $
 #  $Author: pwbldsvc $
 
-# when          who     what, where, why 
-# --------      ---     ------------------------------------------------------- 
-# 2015-01-27    an      Copied from cdt_generator.py 
+# when          who     what, where, why
+# --------      ---     -------------------------------------------------------
+# 2015-01-27    an      Copied from cdt_generator.py
 
 # Copyright (c) 2007-2015 Qualcomm Technologies, Inc.
 # All Rights Reserved.
@@ -24,7 +24,6 @@ from xml.dom import minidom
 #import common
 from time import sleep, time
 import time
-from inspect import getargspec
 from os.path import getsize
 import struct, sys
 import logging
@@ -138,9 +137,9 @@ def print_c_formatted(data_list, title, fp):
 def write_c_file(filename, header,metadata,blockdata):
     fp = open(filename, 'w')
     fp.write("""
-/*==========================================================================	
+/*==========================================================================\t
                         NOTE: This is a generated file!
-===========================================================================*/	
+===========================================================================*/\t
 /*==========================================================================
 
                    INCLUDE FILES
@@ -158,11 +157,11 @@ variables and other items needed by this module.
 
 =============================================================================*/
 /**
-* fixed size array that holds the cdt table in memory, it's intialized to 
-* CDT v1 with only one data block which is platform id. The platform id type 
+* fixed size array that holds the cdt table in memory, it's intialized to\x20
+* CDT v1 with only one data block which is platform id. The platform id type\x20
 * is UNKNOWN as default.
 */
-uint8 config_data_table[CONFIG_DATA_TABLE_MAX_SIZE] = 
+uint8 config_data_table[CONFIG_DATA_TABLE_MAX_SIZE] =\x20
 {
 """)
 
@@ -177,19 +176,19 @@ uint8 config_data_table[CONFIG_DATA_TABLE_MAX_SIZE] =
     cdt table size
 */
 """)
-    fp.write("uint32 config_data_table_size = %d;\n" % (len("".join(header+metadata+blockdata))/2))
+    fp.write("uint32 config_data_table_size = %d;\n" % (len("".join(header+metadata+blockdata))//2))
     fp.close()
 
 
-def write_bin_file(filename, data): 
+def write_bin_file(filename, data):
     fp = open(filename, 'wb')
     # Add padding to make data 4-byte aligned
-    padding = (len(data)/2)%4
+    padding = (len(data)//2)%4
     if padding!=0:
         data = data + '00'*(4 - padding)
     for i in range(0, len(data), 2):
         data_item = data[i:i+2]
-        fp.write(chr(int(data_item, 16)))
+        fp.write(bytes([int(data_item, 16)]))
     fp.close()
 
 
@@ -215,8 +214,8 @@ def prettify(elem):
 if __name__ == "__main__":
 
     if len(sys.argv) < 3:
-    	print "Usage: cdt_parse.py filename.xml binfile.bin"
-    	sys.exit(1);
+        print("Usage: cdt_parse.py filename.xml binfile.bin")
+        sys.exit(1)
 
     init_device_log()
 
@@ -231,17 +230,17 @@ if __name__ == "__main__":
 
     RootTag = root.getroot().tag
 
-    iter = root.getiterator()
+    element_iter = getattr(root, 'iter', getattr(root, 'getiterator', None))()
 
     Array       = []
     TempArray   = []
-    for element in iter:
+    for element in element_iter:
         ##print "\n" + element.tag
         if element.tag == 'device':
             if len(TempArray)>0:
                 Array.append(TempArray)
                 TempArray   = []
-                print Array
+                print(Array)
         if element.keys():
             TEXT = element.text
             for name, value in element.items():
@@ -273,7 +272,7 @@ if __name__ == "__main__":
                         TempArray.append(sz)
                     else:
                         ## unhandled
-                        print "ERROR: Don't know how to handle that"
+                        print("ERROR: Don't know how to handle that")
                         sys.exit(1)
 
                 #import pdb; pdb.set_trace()
@@ -281,7 +280,7 @@ if __name__ == "__main__":
     if len(TempArray)>0:
         Array.append(TempArray)
         TempArray   = []
-        print Array
+        print(Array)
 
 metadata = []
 
@@ -290,13 +289,13 @@ metadata = []
 ##cdb1    = ''.join(Array[2])     ## len is 392
 
 ## metadata is distance from 0 to first cdb, then size of cdb
-### so if 2 CDB, then metadata is going to be 2*4bytes = 8, 
+### so if 2 CDB, then metadata is going to be 2*4bytes = 8,
 ## so  14+8=22
-## and 14+8=22+size of last cdb, so +5 = 
+## and 14+8=22+size of last cdb, so +5 =
 blockdata = ''
 NumCDBs = len(Array)-1  ## i.e. 2
 header  = ''.join(Array[0])     ## len is 28, but it's in string form, so 1 byte is FF, so in string form its 2bytes, so len=14
-NumHeaderBytes = len(header)/2
+NumHeaderBytes = len(header)//2
 
 SizeOfMetaData = NumCDBs*4
 
@@ -308,16 +307,16 @@ DistanceInBytesToCDB = NumHeaderBytes + SizeOfMetaData
 
 for i in range(NumCDBs):
     DistanceInBytesToCDB = DistanceInBytesToCDB + SizeOfLastCDB
-    SizeOfLastCDB = len(''.join(Array[(i+1)]))/2
-    print "DistanceInBytesToCDB=%d" % DistanceInBytesToCDB
-    print "SizeOfLastCDB=%d" % SizeOfLastCDB
+    SizeOfLastCDB = len(''.join(Array[(i+1)]))//2
+    print("DistanceInBytesToCDB=%d" % DistanceInBytesToCDB)
+    print("SizeOfLastCDB=%d" % SizeOfLastCDB)
     MetaData = MetaData + ''.join( "%.2X%.2X" % ( (int(DistanceInBytesToCDB)>>0)&0xFF , (int(DistanceInBytesToCDB)>>8)&0xFF ) )
     MetaData = MetaData + ''.join( "%.2X%.2X" % ( (int(SizeOfLastCDB)>>0)&0xFF , (int(SizeOfLastCDB)>>8)&0xFF ))
     blockdata = blockdata + ''.join(Array[i+1])
 
-    
 
-##import pdb; pdb.set_trace() 
+
+##import pdb; pdb.set_trace()
 
 # "%.2X" % int(header[0:2])
 
@@ -348,7 +347,7 @@ for i in range(0, len(data), 2):
 
 
 crc = hex(crc & 0xffffffff).strip('L')
-crc = struct.pack('<I', int(crc, 16)).encode('hex')
+crc = struct.pack('<I', int(crc, 16)).hex()
 
 #Updating CRC field in CDT Header
 header_crc = header[0:12] + str(crc) + header[20:]
@@ -359,6 +358,5 @@ header_new = header_crc[0:9] + CDT_VERSION + header_crc[10:]
 write_bin_file(bin_file_name, header_new+MetaData+blockdata)
 write_c_file(c_file_name, header_new,MetaData,blockdata)
 
-print "\n\nCreated '%s'" % bin_file_name
-print "Created '%s'" % c_file_name
-
+print("\n\nCreated '%s'" % bin_file_name)
+print("Created '%s'" % c_file_name)

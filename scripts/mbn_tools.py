@@ -80,15 +80,15 @@ ELFINFO_MAG0_INDEX        = 0
 ELFINFO_MAG1_INDEX        = 1
 ELFINFO_MAG2_INDEX        = 2
 ELFINFO_MAG3_INDEX        = 3
-ELFINFO_MAG0              = '\x7f'
-ELFINFO_MAG1              = 'E'
-ELFINFO_MAG2              = 'L'
-ELFINFO_MAG3              = 'F'
+ELFINFO_MAG0              = 0x7f
+ELFINFO_MAG1              = ord('E')
+ELFINFO_MAG2              = ord('L')
+ELFINFO_MAG3              = ord('F')
 ELFINFO_CLASS_INDEX       = 4
-ELFINFO_CLASS_32          = '\x01'
-ELFINFO_CLASS_64          = '\x02'
+ELFINFO_CLASS_32          = 0x01
+ELFINFO_CLASS_64          = 0x02
 ELFINFO_VERSION_INDEX     = 6
-ELFINFO_VERSION_CURRENT   = '\x01'
+ELFINFO_VERSION_CURRENT   = 0x01
 ELF_BLOCK_ALIGN           = 0x1000
 ALIGNVALUE_1MB             = 0x100000
 ALIGNVALUE_4MB             = 0x400000
@@ -296,9 +296,9 @@ class Elf_Ehdr_common:
       self.e_version      = unpacked_data[3]
 
    def printValues(self):
-      print "ATTRIBUTE / VALUE"
-      for attr, value in self.__dict__.iteritems():
-         print attr, value
+      print("ATTRIBUTE / VALUE")
+      for attr, value in self.__dict__.items():
+         print(attr, value)
 
 
 
@@ -328,9 +328,9 @@ class Elf32_Ehdr:
       self.e_shstrndx     = unpacked_data[13]
 
    def printValues(self):
-      print "ATTRIBUTE / VALUE"
-      for attr, value in self.__dict__.iteritems():
-         print attr, value
+      print("ATTRIBUTE / VALUE")
+      for attr, value in self.__dict__.items():
+         print(attr, value)
 
    def getPackedData(self):
       values = [self.e_ident,
@@ -372,9 +372,9 @@ class Elf32_Phdr:
       self.p_align        = unpacked_data[7]
 
    def printValues(self):
-      print "ATTRIBUTE / VALUE"
-      for attr, value in self.__dict__.iteritems():
-         print attr, value
+      print("ATTRIBUTE / VALUE")
+      for attr, value in self.__dict__.items():
+         print(attr, value)
 
    def getPackedData(self):
       values = [self.p_type,
@@ -415,9 +415,9 @@ class Elf64_Ehdr:
       self.e_shstrndx     = unpacked_data[13]
 
    def printValues(self):
-      print "ATTRIBUTE / VALUE"
-      for attr, value in self.__dict__.iteritems():
-         print attr, value
+      print("ATTRIBUTE / VALUE")
+      for attr, value in self.__dict__.items():
+         print(attr, value)
 
    def getPackedData(self):
       values = [self.e_ident,
@@ -459,9 +459,9 @@ class Elf64_Phdr:
       self.p_align        = unpacked_data[7]
 
    def printValues(self):
-      print "ATTRIBUTE / VALUE"
-      for attr, value in self.__dict__.iteritems():
-         print attr, value
+      print("ATTRIBUTE / VALUE")
+      for attr, value in self.__dict__.items():
+         print(attr, value)
 
    def getPackedData(self):
       values = [self.p_type,
@@ -485,8 +485,8 @@ class SegmentInfo:
       self.flag  = 0
       self.start_addr = 0
    def printValues(self):
-      print 'Flag: ' + str(self.flag)
-      print 'Start Address: ' + str(hex(self.start_addr))
+      print('Flag: ' + str(self.flag))
+      print('Start Address: ' + str(hex(self.start_addr)))
 
 #----------------------------------------------------------------------------
 # Regular Boot Header Class
@@ -761,7 +761,7 @@ def generate_meta_data(env, meta_out_file_name, add_magic_num = False):
       xml_target_file.close()
    else:
       xml_target_file.close()
-      raise RuntimeError, "XML Size too large: " + str(xml_header_size)
+      raise RuntimeError("XML Size too large: " + str(xml_header_size))
 
 #----------------------------------------------------------------------------
 # encrypt_mbn
@@ -854,13 +854,13 @@ def image_header(env, gen_dict,
 
    # Preliminary checks
    if (requires_preamble is True) and (preamble_file_name is None):
-      raise RuntimeError, "Image Header requires a preamble file"
+      raise RuntimeError("Image Header requires a preamble file")
 
    if (gen_dict['IMAGE_KEY_MBN_TYPE'] == 'elf') and (elf_file_name is None):
-      raise RuntimeError, "ELF Image Headers require an elf file"
+      raise RuntimeError("ELF Image Headers require an elf file")
 
    if (in_code_size is None) and (os.path.exists(code_file_name) is False):
-      raise RuntimeError, "Code size unavailable, and input file does not exist"
+      raise RuntimeError("Code size unavailable, and input file does not exist")
 
    # Initialize
    if in_code_size is not None:
@@ -951,7 +951,7 @@ def image_header(env, gen_dict,
       boot_header.writePackedData(target = output_file_name, write_full_hdr = write_full_hdr)
 
    else:
-      raise RuntimeError, "Header format not supported: " + str(header_format)
+      raise RuntimeError("Header format not supported: " + str(header_format))
    return 0
 
 #----------------------------------------------------------------------------
@@ -959,7 +959,7 @@ def image_header(env, gen_dict,
 #----------------------------------------------------------------------------
 def pboot_gen_elf(env, elf_in_file_name,
                        hash_out_file_name,
-		       compress_method,
+                       compress_method,
                        elf_out_file_name,
                        secure_type = 'non_secure',
                        hash_seg_max_size = None,
@@ -1008,15 +1008,15 @@ def pboot_gen_elf(env, elf_in_file_name,
      is_com = False
 
    if elf_header.e_ident[ELFINFO_CLASS_INDEX] == ELFINFO_CLASS_64:
-      new_phdr = Elf64_Phdr('\0' * ELF64_PHDR_SIZE)
+      new_phdr = Elf64_Phdr(b'\0' * ELF64_PHDR_SIZE)
       elf_header_size = ELF64_HDR_SIZE
       is_elf64 = True
    else:
-      new_phdr = Elf32_Phdr('\0' * ELF32_PHDR_SIZE)
+      new_phdr = Elf32_Phdr(b'\0' * ELF32_PHDR_SIZE)
       elf_header_size = ELF32_HDR_SIZE
       is_elf64 = False
 
-   hash = '\0' * MI_PROG_BOOT_DIGEST_SIZE
+   hash = b'\0' * MI_PROG_BOOT_DIGEST_SIZE
    phdr_start = 0
    bytes_to_pad = 0
    hash_seg_end = 0
@@ -1025,7 +1025,7 @@ def pboot_gen_elf(env, elf_in_file_name,
    if elf_out_file_name is not None:
       # Assert limit on number of program headers in input ELF
       if num_phdrs > MAX_PHDR_COUNT:
-         raise RuntimeError, "Input ELF has exceeded maximum number of program headers"
+         raise RuntimeError("Input ELF has exceeded maximum number of program headers")
 
       # Create new program header for the ELF Header + Program Headers
       new_phdr.p_type = NULL_TYPE
@@ -1035,11 +1035,11 @@ def pboot_gen_elf(env, elf_in_file_name,
       elf_header.e_phnum += 2
 
       # Create an empty hash entry for PHDR_TYPE
-      hash_out_fp.write('\0' * MI_PROG_BOOT_DIGEST_SIZE)
+      hash_out_fp.write(b'\0' * MI_PROG_BOOT_DIGEST_SIZE)
       hashtable_size += MI_PROG_BOOT_DIGEST_SIZE
 
       # Create an empty hash entry for the hash segment itself
-      hash_out_fp.write('\0' * MI_PROG_BOOT_DIGEST_SIZE)
+      hash_out_fp.write(b'\0' * MI_PROG_BOOT_DIGEST_SIZE)
       hashtable_size += MI_PROG_BOOT_DIGEST_SIZE
 
    # Begin hash table generation
@@ -1053,13 +1053,13 @@ def pboot_gen_elf(env, elf_in_file_name,
 
          # Check if the vaddr is page aligned
          off = curr_phdr.p_vaddr & (ELF_BLOCK_ALIGN - 1)
-         if int(off) is not 0:
+         if int(off) != 0:
             seg_size -= (ELF_BLOCK_ALIGN - off)
             seg_offset += (ELF_BLOCK_ALIGN - off)
 
          # Seg_size should be page aligned
          if (seg_size & (ELF_BLOCK_ALIGN - 1)) > 0:
-            raise RuntimeError, "seg_size: " + hex(seg_size) + " is not ELF page aligned!"
+            raise RuntimeError("seg_size: " + hex(seg_size) + " is not ELF page aligned!")
 
          off = seg_offset + seg_size
 
@@ -1076,7 +1076,7 @@ def pboot_gen_elf(env, elf_in_file_name,
             if MI_PBT_CHECK_FLAG_TYPE(curr_phdr.p_flags) is True:
                hash = generate_hash(fbuf, sha_algo)
             else:
-               hash = '\0' * MI_PROG_BOOT_DIGEST_SIZE
+               hash = b'\0' * MI_PROG_BOOT_DIGEST_SIZE
 
             # Write hash to file
             hash_out_fp.write(hash)
@@ -1113,7 +1113,7 @@ def pboot_gen_elf(env, elf_in_file_name,
              prc.wait()
 
              if prc.returncode != 0:
-               print 'ERROR: unable to create compressed file Segment for' + str(Comfile)
+               print('ERROR: unable to create compressed file Segment for' + str(Comfile))
              else:
                com_out_fp = OPEN(Comfile, "rb")
                com_out_fp.seek(0,2)
@@ -1136,7 +1136,7 @@ def pboot_gen_elf(env, elf_in_file_name,
          if (MI_PBT_CHECK_FLAG_TYPE(curr_phdr.p_flags) is True) and (data_len > 0):
             hash = generate_hash(file_buff, sha_algo)
          else:
-            hash = '\0' *  MI_PROG_BOOT_DIGEST_SIZE
+            hash = b'\0' * MI_PROG_BOOT_DIGEST_SIZE
 
          # Write hash to file
          hash_out_fp.write(hash)
@@ -1166,9 +1166,9 @@ def pboot_gen_elf(env, elf_in_file_name,
      if (hash_seg_max_size is not None):
          # Error checking for hash segment size validity
         if hashtable_size > hash_seg_max_size:
-           raise RuntimeError, "Hash table exceeds maximum hash segment size: " + hex(hash_seg_max_size)
-        if (hash_seg_max_size & (ELF_BLOCK_ALIGN-1)) is not 0:
-           raise RuntimeError, "Hash segment size passed is not ELF Block Aligned: " + hex(hash_seg_max_size)
+           raise RuntimeError("Hash table exceeds maximum hash segment size: " + hex(hash_seg_max_size))
+        if (hash_seg_max_size & (ELF_BLOCK_ALIGN-1)) != 0:
+           raise RuntimeError("Hash segment size passed is not ELF Block Aligned: " + hex(hash_seg_max_size))
 
      # Check if hash physical address parameter was passed
      if last_phys_addr is not None:
@@ -1214,7 +1214,7 @@ def pboot_gen_elf(env, elf_in_file_name,
 
          # We do not copy over program headers of PHDR type, decrement the program
          # header count and continue the loop
-         if curr_phdr.p_type is PHDR_TYPE:
+         if curr_phdr.p_type == PHDR_TYPE:
             elf_header.e_phnum -= 1
             continue
 
@@ -1272,7 +1272,7 @@ def pboot_gen_elf(env, elf_in_file_name,
          if curr_phdr.p_type is PHDR_TYPE:
             continue
 
-	 if ((is_com == True) and  ((curr_phdr.p_type is LOAD_TYPE) or (curr_phdr.p_type == PHDR_ENTR_TYPE))):
+         if ((is_com == True) and ((curr_phdr.p_type == LOAD_TYPE) or (curr_phdr.p_type == PHDR_ENTR_TYPE))):
            curr_phdr.p_type = curr_phdr.p_type | 0x68000000
          if (is_com == True):
            curr_phdr.p_offset = iarrPhdrFileOff[i]
@@ -1351,7 +1351,7 @@ def pboot_add_hash(env, elf_in_file_name,
       file_copy_offset(hash_tbl_fp, 0, elf_out_fp, hash_hdr_offset, hash_size)
 
    else:
-      raise RuntimeError, "Hash segment program header not found in file " + elf_in_file_name
+      raise RuntimeError("Hash segment program header not found in file " + elf_in_file_name)
 
    # Close files
    elf_in_fp.close()
@@ -1366,7 +1366,7 @@ def pboot_add_hash(env, elf_in_file_name,
 def image_auth(env, *args):
 
    if len(args) < 7 or len(args) > 8:
-      raise RuntimeError, "Usage Invalid"
+      raise RuntimeError("Usage Invalid")
 
    # Initialize File Names
    binary_in            = args[0]
@@ -1396,7 +1396,7 @@ def image_auth(env, *args):
       num_certs = num_certs + 1
 
    if (num_certs == 0):
-      raise RuntimeError, "Missing file(s) required for signing.\n"
+      raise RuntimeError("Missing file(s) required for signing.\n")
 
    # Create the Certificate Chain
    concat_files (cert_chain_out, cert_list)
@@ -1410,7 +1410,7 @@ def image_auth(env, *args):
       pad_file(cert_fp, bytes_to_pad, PAD_BYTE_1)
       cert_fp.close()
    else:
-      raise RuntimeError, "Certificate Size too large: " + str(cert_size)
+      raise RuntimeError("Certificate Size too large: " + str(cert_size))
 
    # Create the Final Signed Image File
    concat_files (signed_image_out, [binary_in, signature, cert_chain_out])
@@ -1430,16 +1430,16 @@ def modify_relocatable_flags(env, output_elf ):
    [elf_header, phdr_table] = preprocess_elf_file(output_elf)
 
    if elf_header.e_ident[ELFINFO_CLASS_INDEX] == ELFINFO_CLASS_64:
-      curr_phdr = Elf64_Phdr('\0' * ELF64_PHDR_SIZE)
+      curr_phdr = Elf64_Phdr(b'\0' * ELF64_PHDR_SIZE)
       elf_header_size = ELF64_HDR_SIZE
       is_elf64 = True
    else:
-      curr_phdr = Elf32_Phdr('\0' * ELF32_PHDR_SIZE)
+      curr_phdr = Elf32_Phdr(b'\0' * ELF32_PHDR_SIZE)
       elf_header_size = ELF32_HDR_SIZE
       is_elf64 = False
 
    # Open files
-   elf_in_fp = OPEN(output_elf, "r+")
+   elf_in_fp = OPEN(output_elf, "rb+")
 
    # Go to the start of the p_flag entry in the first program header
    file_offset_align_flag = elf_header.e_phoff + phdr_align_flag_offset
@@ -1502,20 +1502,20 @@ def modify_elf_flags(env, elf_in_file_name,
    segment_list = readSCL(scl_file_name, env['GLOBAL_DICT'])
 
    if elf_header.e_ident[ELFINFO_CLASS_INDEX] == ELFINFO_CLASS_64:
-     curr_phdr = Elf64_Phdr('\0' * ELF64_PHDR_SIZE)
+     curr_phdr = Elf64_Phdr(b'\0' * ELF64_PHDR_SIZE)
      # Offset into program header where the p_flags field is stored
      phdr_flag_off = 4
    else:
-     curr_phdr = Elf32_Phdr('\0' * ELF32_PHDR_SIZE)
+     curr_phdr = Elf32_Phdr(b'\0' * ELF32_PHDR_SIZE)
      # Offset into program header where the p_flags field is stored
      phdr_flag_off = 24
 
    # Open files
-   elf_in_fp = OPEN(elf_in_file_name, "r+")
+   elf_in_fp = OPEN(elf_in_file_name, "rb+")
 
    # Check for corresponding number of segments
    if len(segment_list) is not elf_header.e_phnum:
-      raise RuntimeError, 'SCL file and ELF file have different number of segments!'
+      raise RuntimeError('SCL file and ELF file have different number of segments!')
 
    # Go to the start of the p_flag entry in the first program header
    file_offset = elf_header.e_phoff + phdr_flag_off
@@ -1549,11 +1549,11 @@ def generate_code_hash(env, elf_in_file_name):
    [elf_header, phdr_table] = preprocess_elf_file(elf_in_file_name)
 
    if elf_header.e_ident[ELFINFO_CLASS_INDEX] == ELFINFO_CLASS_64:
-     curr_phdr = Elf64_Phdr('\0' * ELF64_PHDR_SIZE)
+     curr_phdr = Elf64_Phdr(b'\0' * ELF64_PHDR_SIZE)
      # Offset into program header where the p_flags field is stored
      phdr_flag_off = 4
    else:
-     curr_phdr = Elf32_Phdr('\0' * ELF32_PHDR_SIZE)
+     curr_phdr = Elf32_Phdr(b'\0' * ELF32_PHDR_SIZE)
      # Offset into program header where the p_flags field is stored
      phdr_flag_off = 24
 
@@ -1622,11 +1622,11 @@ def generate_code_hash(env, elf_in_file_name):
           (curr_phdr.p_flags & PH_PERM_MASK) == PH_PERM_RX and
           curr_pages == code_seg_pages):
          if (code_seg_idx != -1):
-            raise RuntimeError, 'Multiple code segments match for: ' + code_seg_pages + ' pages'
+            raise RuntimeError('Multiple code segments match for: ' + code_seg_pages + ' pages')
          code_seg_idx = i
 
    if (code_seg_idx == -1):
-      raise RuntimeError, 'No matching code segment found'
+      raise RuntimeError('No matching code segment found')
 
    code_phdr = phdr_table[code_seg_idx]
 
@@ -1690,7 +1690,7 @@ def readSCL(filename, global_dict):
      # Look for the symbol '{' for the line to read.
      # Use bracket counter to skip nested '{ }'
      if ('{' in current_line):
-        if bracket_counter is 0:
+        if bracket_counter == 0:
            # Create a new SegmentInfo class and set up tokens
            new_scl_entry = SegmentInfo()
            previous_line = previous_line.strip()
@@ -1700,7 +1700,7 @@ def readSCL(filename, global_dict):
            # Token 1: Segment Name
            # Token 2: Start Address
            if len(tokens) < 2:
-              raise RuntimeError, 'SCL Segment Syntax malformed: ' + previous_line
+              raise RuntimeError('SCL Segment Syntax malformed: ' + previous_line)
 
            # Get the segment flags corresponding to the segment name description
            new_scl_entry.flag = getSegmentFlag(tokens[0].strip(strip_chars))
@@ -1714,7 +1714,7 @@ def readSCL(filename, global_dict):
               if start_addr in global_dict:
                  return global_dict[start_addr]
               else:
-                 raise RuntimeError, 'Unrecognized start address: ' + start_addr
+                 raise RuntimeError('Unrecognized start address: ' + start_addr)
 
            new_scl_entry.start_addr = start_addr_final
            seg_list.append(new_scl_entry)
@@ -1753,8 +1753,8 @@ def getSegmentFlag(seg_info):
    POOL_INDEX_0 = "INDEX_0"
    POOL_INDEX_1 = "INDEX_1"
 
-   if seg_info is None or len(seg_info) is 0:
-      raise RuntimeError, 'Invalid segment information passed: ' + seg_info
+   if seg_info is None or len(seg_info) == 0:
+      raise RuntimeError('Invalid segment information passed: ' + seg_info)
 
    # Conditional checks and assignments of the corresponding segment flag values
    if NOTPAGEABLE in seg_info:
@@ -1807,7 +1807,7 @@ def getSegmentFlag(seg_info):
          ret_val = MI_PBT_ELF_AMSS_PAGED_RW_SEGMENT
 
    else:
-      raise RuntimeError, 'The segment name is wrongly defined in the SCL file: ' + seg_info
+      raise RuntimeError('The segment name is wrongly defined in the SCL file: ' + seg_info)
 
    return ret_val
 
@@ -1818,10 +1818,10 @@ def getSegmentFlag(seg_info):
 def pad_file(fp, num_bytes, value):
 
    if num_bytes < 0:
-      raise RuntimeError, "Number of bytes to pad must be greater than zero"
+      raise RuntimeError("Number of bytes to pad must be greater than zero")
 
    while num_bytes > 0:
-      fp.write('%c' % value)
+      fp.write(bytes([value]))
       num_bytes -= 1
 
    return
@@ -1887,7 +1887,7 @@ def generate_global_dict(env):
 def populate_dictionary(*args):
 
    if len(args) < 1:
-      raise RuntimeError, "At least 1 file must be specified as an input"
+      raise RuntimeError("At least 1 file must be specified as an input")
 
    global_dict = {}
    Fields = ["Define", "Key", "Value"]
@@ -1900,7 +1900,7 @@ def populate_dictionary(*args):
       # Tokenize each line with a white space
       values = csv.DictReader(instream, Fields, delimiter=" ")
 
-      for values in itertools.izip(values):
+      for values in zip(values):
          new_entry = values[0]
          # Verify the parsed tokens
          if (new_entry['Define'] == '#define') and \
@@ -1915,7 +1915,7 @@ def populate_dictionary(*args):
                new_value = 'yes'
 
             # Check for and handle text replacements as we parse
-            if global_dict is not None and len(global_dict.keys()) > 0:
+            if global_dict is not None and len(list(global_dict.keys())) > 0:
                for key in global_dict:
                   new_value = new_value.replace(key, str(global_dict.get(key)))
 
@@ -1939,39 +1939,39 @@ def filter_dictionary(env, global_dict, **kwargs):
 
    # Check for Image Type
    # If IMAGE_TYPE parameter is not provided, raise error
-   if not kwargs.has_key('IMAGE_TYPE'):
-      raise RuntimeError, "IMAGE_TYPE must be defined to use FilterDictionary."
+   if 'IMAGE_TYPE' not in kwargs:
+      raise RuntimeError("IMAGE_TYPE must be defined to use FilterDictionary.")
    else:
       image_type = kwargs.get('IMAGE_TYPE')
       if type(image_type) is not str:
-         raise RuntimeError, "IMAGE_TYPE must be of string type."
+         raise RuntimeError("IMAGE_TYPE must be of string type.")
 
    # Check for Flash Type
    # If FLASH_TYPE parameter is not provided, default to 'nand'
-   if not kwargs.has_key('FLASH_TYPE'):
+   if 'FLASH_TYPE' not in kwargs:
       flash_type = 'nand'
    else:
       flash_type = kwargs.get('FLASH_TYPE')
       if type(flash_type) is not str:
-         raise RuntimeError, "FLASH_TYPE must be of string type. "
+         raise RuntimeError("FLASH_TYPE must be of string type. ")
 
    # Check for MBN Type
    # If MBN_TYPE parameter is not provided, default to 'elf'
-   if not kwargs.has_key('MBN_TYPE'):
+   if 'MBN_TYPE' not in kwargs:
       mbn_type = 'elf'
    else:
       mbn_type = kwargs.get('MBN_TYPE')
       if mbn_type != 'elf' and mbn_type != 'bin':
-         raise RuntimeError, "MBN_TYPE currently not supported: " + mbn_type
+         raise RuntimeError("MBN_TYPE currently not supported: " + mbn_type)
 
    # Check for Image ID
    # If IMAGE_ID parameter is not provided, default to ID 0
-   if not kwargs.has_key('IMAGE_ID'):
+   if 'IMAGE_ID' not in kwargs:
       image_id = ImageType.NONE_IMG
    else:
       image_id = kwargs.get('IMAGE_ID')
       if type(image_id) is not int:
-         raise RuntimeError, "IMAGE_ID must be of integer type."
+         raise RuntimeError("IMAGE_ID must be of integer type.")
 
    # Initialize
    gen_dict = {}
@@ -1989,16 +1989,16 @@ def filter_dictionary(env, global_dict, **kwargs):
       id_mbn_type = image_id_table[image_type][2]
 
    # Handle MBN Type and assign image destination address
-   if id_mbn_type is 'elf':
+   if id_mbn_type == 'elf':
       pass
-   elif id_mbn_type is 'bin':
+   elif id_mbn_type == 'bin':
       template_key_match = 'IMAGE_KEY_' + id_match_str + "_DEST_ADDR"
       if template_key_match in global_dict:
          image_dest = global_dict[template_key_match]
       else:
-         raise RuntimeError, "Builds file does not have IMAGE_KEY pair for: " + image_type
+         raise RuntimeError("Builds file does not have IMAGE_KEY pair for: " + image_type)
    else:
-      raise RuntimeError, "MBN_TYPE currently not supported: " + mbn_type
+      raise RuntimeError("MBN_TYPE currently not supported: " + mbn_type)
 
    # Assign generic dictionary key/value pairs
    gen_dict['IMAGE_KEY_IMAGE_ID'] = id
@@ -2029,7 +2029,7 @@ def filter_dictionary(env, global_dict, **kwargs):
       gen_dict['IMAGE_KEY_OEM_NUM_ROOT_CERTS'] = oem_num_root_certs
 
    else:
-      raise RuntimeError, "Invalid OEM root certificate configuration values"
+      raise RuntimeError("Invalid OEM root certificate configuration values")
 
    # Assign additional dictionary key/values pair as needed by tools.
 
@@ -2059,7 +2059,7 @@ def preprocess_elf_file(elf_file_name):
    elf_header = Elf_Ehdr_common(elf_fp.read(ELF_HDR_COMMON_SIZE))
 
    if verify_elf_header(elf_header) is False:
-      raise RuntimeError, "ELF file failed verification: " + elf_file_name
+      raise RuntimeError("ELF file failed verification: " + elf_file_name)
 
    elf_fp.seek(0)
 
@@ -2072,7 +2072,7 @@ def preprocess_elf_file(elf_file_name):
 
    # Verify ELF header information
    if verify_elf_header(elf_header) is False:
-      raise RuntimeError, "ELF file failed verification: " + elf_file_name
+      raise RuntimeError("ELF file failed verification: " + elf_file_name)
 
    # Get program header size
    phdr_size = elf_header.e_phentsize
@@ -2175,9 +2175,9 @@ def initialize_hash_phdr(elf_in_file_name, hash_tbl_size, hdr_size, hdr_offset, 
 
    # Update the hash table program header
    if is_elf64 is True:
-      hash_Phdr = Elf64_Phdr('\0'*ELF64_PHDR_SIZE)
+      hash_Phdr = Elf64_Phdr(b'\0' * ELF64_PHDR_SIZE)
    else:
-      hash_Phdr = Elf32_Phdr('\0'*ELF32_PHDR_SIZE)
+      hash_Phdr = Elf32_Phdr(b'\0' * ELF32_PHDR_SIZE)
    hash_Phdr.p_flags = MI_PBT_ELF_HASH_SEGMENT
    hash_Phdr.p_align = ELF_BLOCK_ALIGN
    hash_Phdr.p_offset = hash_hdr_offset
@@ -2259,7 +2259,7 @@ def OPEN(file_name, mode):
     try:
        fp = open(file_name, mode)
     except IOError:
-       raise RuntimeError, "The file could not be opened: " + file_name
+       raise RuntimeError("The file could not be opened: " + file_name)
 
     # File open has succeeded with the given mode, return the file object
     return fp
@@ -2373,4 +2373,3 @@ def pad_SBL1_image (env, target, min_size_with_pad=MIN_IMAGE_SIZE_WITH_PAD, page
 #----------------------------------------------------------------------------
 # HELPER FUNCTIONS END
 #----------------------------------------------------------------------------
-
